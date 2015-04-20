@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @SuppressWarnings("rawtypes")
@@ -254,8 +255,27 @@ public class ActiveNotifier implements FineGrainedNotifier {
         }
 
         private MessageBuilder startMessage() {
+            message.append("*Job:* ");
             message.append(this.escape(build.getProject().getFullDisplayName()));
-            message.append(" - ");
+            message.append("\n");
+
+            List<Cause> myCauseList = build.getAction(CauseAction.class).getCauses();
+            for (Cause myCause : myCauseList) {
+              message.append(this.escape(myCause.getShortDescription().replace("Started by user", "*Run by*:")));
+              message.append("\n");
+            }
+
+            Map<String, String> vars = build.getBuildVariables();
+
+            if (vars != null && !vars.isEmpty()) {
+              message.append("_Parameters_\n");
+
+              for (Map.Entry<String,String> entry : vars.entrySet()) {
+                message.append("*" + entry.getKey() + ":* " + entry.getValue() + "\n");
+              }
+            }
+
+            message.append("*Job ID and result:* ");
             message.append(this.escape(build.getDisplayName()));
             message.append(" ");
             return this;
